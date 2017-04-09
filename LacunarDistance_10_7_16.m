@@ -1,3 +1,8 @@
+% Not functional yet :(
+% experimetally started to use dlmwrite insteaf of csvwrtie so we can
+% inclue the titles of each metric in the csv. May also experiment with
+% appending workbooks to existing file within folder.
+
 % This script calculates the distance of the closest lacunae COM for each
 % lacunae (from COM to COM)
 

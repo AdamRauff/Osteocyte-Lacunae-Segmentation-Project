@@ -13,7 +13,7 @@ PRINT_NUM_OBJ = true;
 
 % display a graph (made with isosurface) of the segmented lacunae with
 % arrows modeling their principle axes
-DISP_MOMENT_VECT = true;
+DISP_MOMENT_VECT = false;
 
 % The following flag should not can only be true if DISP_MOMENT_VECT is
 % true
