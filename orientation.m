@@ -1,8 +1,27 @@
-% calculates the average theta and phi 
+% Orientation.m
+
+% v1 Authored by Adam Rauff & Chelsea Heveran
+
+% This script computes the orientation of the principal axes of each lacuna
+% with respect to the global coordinate system
+
+% Theta - difference between primary principal axis of lacuna and x - axis
+%       (projected onto 2D space - x,y)
+
+% Phi - Difference between x-y plane and Z-axis
+
+% Part 1 
+%   - compute phi and theta
+
+% Part 2
+%   - compute statistics
+%   - compute span theta
 
 % call on surface area and all preceding code
 surfaceArea;
 
+
+%% Part 1
 % pre-allocate
 PhiVec = zeros(TotLacNum,1);
 ThetaVec = zeros(TotLacNum,1);
@@ -61,14 +80,13 @@ for i = 1:TotLacNum
     ThetaVec(i,1) = MomInt(i).theta;
     
     MomInt(i).phi = acosd(W(i));
-    % if (atan2d(V(i),U(i))-90) - blockTheta > (atan2d(-V(i),-U(i))-90) - blockTheta
-    %     MomInt(i).phi = acosd(-W(i));
-    % end
+
     if MomInt(i).phi == 180
         MomInt(i).phi = 0;
     end
 end
 
+%% Part 2
 % standard summation by for loop 
 avgTheta = 0;
 for i = 1:TotLacNum
@@ -113,7 +131,7 @@ VGenDirect = VGenDirect./norm(VGenDirect);
 % pre- allocate
 spanTheta = zeros(TotLacNum,1);
 
-% meausring the angle between vectors. this angle only exists on the plane
+% meausring the angle between vectors. Angle only exists on the plane
 % that is spanned by the two vectors
 for i = 1:TotLacNum
     spanTheta(i) = acosd((dot(VGenDirect,[U(i); V(i); W(i)]))/(norm(VGenDirect)*norm([U(i); V(i); W(i)])));

@@ -1,19 +1,36 @@
-% This script calculates the distance of the closest lacunae COM for each
-% lacunae (from COM to COM)
+% LacunarDistance.m
+
+% v1 Authored by Adam Rauff & Chelsea Heveran
+
+% Compute distance of closest lacunae COM for each
+% lacunae (COM to COM)
+
+% Part 1
+%   - Evaluate COM to COM distances for each lacuna
+
+% Part 2
+%   - find closest lacuna for each lacuna
+
+% part 3 (optional flag)
+%   - plot closest lacuna line
+
+% part 4
+%   - write data to csv
 
 % call on orientation.m to run all necessary preceding scripts
 orientation;
 
+%% Part 1 - evaluate COM distances
 % pre-allocate field in a structure
-
 for i = 1:TotLacNum
     lacDist(i).COMDist = zeros(TotLacNum,1);
 end
-
+% ------------------------------------------------------------------------
 % Note this field stores an array of size(TotLacNum,1) for each lacunae.
-% this array will hold the distance from that lacunae. 
+% Each array will hold the distance from that lacunae. 
 % The array of lacunae 1 would read 0 in the first entry, as it is 0 microns away from its own
 % COM, and then start listing magnitudes of distance in microns.
+% ------------------------------------------------------------------------
 
 % for each lacunae, scroll through all lacunae (other then itself)
 for i = 1 : TotLacNum
@@ -29,6 +46,7 @@ for i = 1 : TotLacNum
     end
 end
 
+%% Part 2 - find closest lacunae
 % pre- allocate
 shrtCOMDist = zeros(TotLacNum,1);
 
@@ -39,6 +57,7 @@ for i = 1:TotLacNum
     shrtCOMDist(i,1) = lacDist(i).shrtDist; % store in vector for ease of data conversion to csv
 end
 
+%% Part 3 - plotting
 % if the flag for plotting the closest lacunae line is set to true (found
 % in GetVoxelLocations.m script) then execute the following block
 if LAC_DIST_LINE == true
@@ -53,11 +72,6 @@ if LAC_DIST_LINE == true
     % loop through each COMDist array to mark which lacunae is closet to each
     % lacunae. This is only used for plotting the shortest distance line
     for i = 1:TotLacNum
-        % ------------------------------------------------------
-        % for efficiency, consider the following
-        % row = find(lacDist(i).COMDist == lacDist(i).shrtDist)
-        % k(i) = j;
-        % ------------------------------------------------------
         for j = 1:TotLacNum
             if lacDist(i).COMDist(j) == lacDist(i).shrtDist
                 k(i) = j;
@@ -81,7 +95,7 @@ end
 % clear workspace
 clear i j LAC_DIST_LINE fieldVal CCobj DISP_MOMENT_VECT
 
-%% Write relevant data to csv file
+%% Part 4 - Write data to CSV file Write 
 
 % flip array to be column vector
 if size(LacArr,1) == 1

@@ -1,21 +1,20 @@
-% this script measures the surface area of each segmented lacunae, and the
-% surface area of the best fit ellipsoid of each lacuna
+% surfaceArea.m
+
+% v1 Authored by Adam Rauff & Chelsea Heveran
+
+% Measures surface area (SA) of each segmented lacunae, and 
+% best fit ellipsoid 
+
+% Part 1
+% SA of ellipsoid
+
+% Part 2
+% SA from point cloud (delaunay triangulation)
 
 % call on anisotropy and all preceding scripts 
 anisotropy;
 
-%finding location of surface points of each lacunae
-% and store their subscripts
-for r = 1:TotLacNum
-    index = 1;
-    for i = 1: NumLacVox(r)
-        if maskVoxelLoc(r).LacCoord(i,4) == 1
-            maskVoxelLoc(r).SurfCoord(index,:) = [maskVoxelLoc(r).LacCoord(i,1) maskVoxelLoc(r).LacCoord(i,2) maskVoxelLoc(r).LacCoord(i,3)];
-            index = index +1;
-        end
-    end
-end
-
+%% Part 1 - ellipsoid SA
 % surface area of the ellipsoid
 eliSurfArea = zeros(TotLacNum,1);
 
@@ -42,7 +41,21 @@ for i = 1:TotLacNum
     elishrtRad(i) = I(i).radii(3);
 end
 
-%surface are from point cloud
+%% Part 2 - SA from point cloud
+%finding location of surface points of each lacunae
+% and store their subscripts
+for r = 1:TotLacNum
+    index = 1;
+    for i = 1: NumLacVox(r)
+        if maskVoxelLoc(r).LacCoord(i,4) == 1
+            maskVoxelLoc(r).SurfCoord(index,:) = [maskVoxelLoc(r).LacCoord(i,1) maskVoxelLoc(r).LacCoord(i,2) maskVoxelLoc(r).LacCoord(i,3)];
+            index = index +1;
+        end
+    end
+end
+
+
+%surface area from point cloud (delaunay Triangulation algorithm)
 for i = 1:TotLacNum
     tri(i).tri = delaunayTriangulation(maskVoxelLoc(i).SurfCoord(:,1),maskVoxelLoc(i).SurfCoord(:,2),maskVoxelLoc(i).SurfCoord(:,3));
     [fbtri(i).fbtri, fbpoints(i).fbpoints] = freeBoundary(tri(i).tri);

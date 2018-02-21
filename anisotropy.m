@@ -1,17 +1,30 @@
 % anisotropy.m
-% this code calculates the lacunar and ellipsodial anistropies.
-% for ellipsoid, this is currently defined as the ratio of the smallest to
+
+% v1 Authored by Adam Rauff & Chelsea Heveran
+
+% Compute lacunar and ellipsodial anisotropies.
+% Ellipsoidal anisotropy -  ratio of the smallest to
 % biggest eigenvalues.
-% for Lacunar, this is the ratio of the smallest to biggest radius
+% Lacunar anisotropy - ratio of the smallest to biggest radii (measured
+% from voxels)
+
+% Part 1
+%   -convert principle moments to vectors (3,1)
+%   -measure best fit ellipsoid
+
+% Part 2
+% Measure anisotropy
 
 % call on graph lacunae in order to invoke all preceding functions
 graphlacunae;
+
+%% Part 1
 
 % pre-allocate structure
 fieldVal =cell(TotLacNum,1);
 I = struct('princI',fieldVal);
 
-% organize principle moments of intertia to (3,1) vectors in field princI
+% organize principle moments of intertia (3,3) to vectors (3,1)
 for i = 1: TotLacNum
     I(i).princI = zeros(3,1);
     for j = 1:3         
@@ -21,8 +34,7 @@ end
 
 % Solve for ellipsoid with identical moments of intertia
 for i = 1:TotLacNum
-    % Check Equations again, I believe it arrived from Mcreadie 2004, but I
-    % also recall some alteration
+    % equation derived from Mcreadie 2004
     elipMat = [0 1 1; 1 0 1; 1 1 0];
     elipMat = (1/5)*LacVol(i)*elipMat;
     I(i).radii = elipMat\I(i).princI; % solving for the 3 by 1 vecotr [a;b;c] of radii 
@@ -37,23 +49,24 @@ for i = 1:TotLacNum
     eliAni(i) = min(I(i).radii)/max(I(i).radii);
 end
 
-% might want to consider goodness of fit of each ellipsoid
-
-% Measuring Lacunar Anisotropy. 
-% This measurement is taken by beginning at the COM, and proceeding in the
-% direction of the principle axes, until a 0 is encountered. This way you
+%% Part 2 Measuring Lacunar Anisotropy. 
+% This measurement is taken by beginning at the COM and proceeding in the
+% direction of the principle axes, until a 0 (intensity) is encountered. This way you
 % measure the "Lacunar" Radius.
+% This is the distance from COM of lacunae to location of first voxel outside lacunae
 
-%-------------------------------------------------------------------------
-% It is highly inefficient to have 6 separate for / while loops that do
-% such similar things. consider consolidating into one Giant for/ while
+% Another way of measuring anisotropy is by relationships from the eigen
+% vectors (i.e eig1/eig3)
+
+% ----------------------------------------------------------------------
+% Note for improvement of code
+% The following while loops could be consolidated into one for/while
 % loop that calculates all six directions (3 axes, -/+) at once.
 %------------------------------------------------------------------------
 
 % measuring real lacunar radius about positive long axis 
 
-% the following piece of code assumes that mask is a logical matrix that
-% contains 1s and 0s
+% the following piece of code assumes that mask is binary (1s and 0s)
 X1=ones(TotLacNum,1);  % location in matrix (mask) along the slope of eigenvector
 Y1=ones(TotLacNum,1);
 Z1=ones(TotLacNum,1);
@@ -71,11 +84,7 @@ micZ = zeros(1,3);
 for i = 1:TotLacNum
 t = 1;
 while mask(round(Y1(i)),round(X1(i)),round(Z1(i))) ==  mask(round(oldY1(i)),round(oldX1(i)),round(oldZ1(i)))                                           
-    % --------------------------------------------------------------------
-    % the direction is measured from the moments that were calculated from
-    % the micron values, shouldn't there be some conversion from the micron
-    % to voxel?
-    % --------------------------------------------------------------------
+
     X1(i) = X(i)+t*MomInt(i).V(2,1);           
     Y1(i) = Y(i)+t*MomInt(i).V(1,1);              
     Z1(i) = Z(i)+t*MomInt(i).V(3,1);
@@ -115,11 +124,11 @@ end
 
 
 % get location of furthermost voxel and then measure distance using distance formula
-micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     % Not sure which point to use for the distance formula.
-micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     % should I use round() numbers since that marks the voxel location in the matrix?
-micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     % should I use the first location outside lacunae, last voxel in lacunae, 
-micX(i) = X(i)*x_dim;              % or last voxel in lacunae with the center translated to middle of voxel?
-micY(i) = Y(i)*y_dim;              % Right now it calculates the distance from COM of lacunae to location of first voxel outside lacunae
+micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     
+micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     
+micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     
+micX(i) = X(i)*x_dim;              
+micY(i) = Y(i)*y_dim;              
 micZ(i) = Z(i)*z_dim; 
 Rad(i).lngPos = sqrt((micX(i)-micX1(i))^2+(micY(i)-micY1(i))^2+(micZ(i)-micZ1(i))^2);
 end
@@ -175,11 +184,11 @@ while mask(round(Y1(i)),round(X1(i)),round(Z1(i))) ==  mask(round(oldY1(i)),roun
 end
 
 % get location of furthermost voxel and then measure distance using distance formula
-micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     % Not sure which point to use for the distance formula.
-micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     % should I use round() numbers since that marks the voxel location in the matrix?
-micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     % should I use the first location outside lacunae, last voxel in lacunae, 
-micX(i) = X(i)*x_dim;              % or last voxel in lacunae with the center translated to middle of voxel?
-micY(i) = Y(i)*y_dim;              % Right now it calculates the distance from COM of lacunae to location of first voxel outside lacunae
+micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     
+micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     
+micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     
+micX(i) = X(i)*x_dim;              
+micY(i) = Y(i)*y_dim;              
 micZ(i) = Z(i)*z_dim; 
 Rad(i).lngNeg = sqrt((micX(i)-micX1(i))^2+(micY(i)-micY1(i))^2+(micZ(i)-micZ1(i))^2);
 end
@@ -235,11 +244,11 @@ while mask(round(Y1(i)),round(X1(i)),round(Z1(i))) ==  mask(round(oldY1(i)),roun
 end
 
 % get location of furthermost voxel and then measure distance using distance formula
-micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     % Not sure which point to use for the distance formula.
-micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     % should I use round() numbers since that marks the voxel location in the matrix?
-micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     % should I use the first location outside lacunae, last voxel in lacunae, 
-micX(i) = X(i)*x_dim;              % or last voxel in lacunae with the center translated to middle of voxel?
-micY(i) = Y(i)*y_dim;              % Right now it calculates the distance from COM of lacunae to location of first voxel outside lacunae
+micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     
+micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     
+micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     
+micX(i) = X(i)*x_dim;              
+micY(i) = Y(i)*y_dim;              
 micZ(i) = Z(i)*z_dim; 
 Rad(i).sndPos = sqrt((micX(i)-micX1(i))^2+(micY(i)-micY1(i))^2+(micZ(i)-micZ1(i))^2);
 end
@@ -295,11 +304,11 @@ while mask(round(Y1(i)),round(X1(i)),round(Z1(i))) ==  mask(round(oldY1(i)),roun
 end
 
 % get location of furthermost voxel and then measure distance using distance formula
-micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     % Not sure which point to use for the distance formula.
-micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     % should I use round() numbers since that marks the voxel location in the matrix?
-micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     % should I use the first location outside lacunae, last voxel in lacunae, 
-micX(i) = X(i)*x_dim;              % or last voxel in lacunae with the center translated to middle of voxel?
-micY(i) = Y(i)*y_dim;              % Right now it calculates the distance from COM of lacunae to location of first voxel outside lacunae
+micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     
+micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     
+micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     
+micX(i) = X(i)*x_dim;              
+micY(i) = Y(i)*y_dim;              
 micZ(i) = Z(i)*z_dim; 
 Rad(i).sndNeg = sqrt((micX(i)-micX1(i))^2+(micY(i)-micY1(i))^2+(micZ(i)-micZ1(i))^2);
 end
@@ -355,10 +364,10 @@ while mask(round(Y1(i)),round(X1(i)),round(Z1(i))) ==  mask(round(oldY1(i)),roun
 end
 
 % get location of furthermost voxel and then measure distance using distance formula
-micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     % Not sure which point to use for the distance formula.
-micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     % should I use round() numbers since that marks the voxel location in the matrix?
-micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     % should I use the first location outside lacunae, last voxel in lacunae, micX(i) = X(i)*x_dim;              % or last voxel in lacunae with the center translated to middle of voxel?
-micY(i) = Y(i)*y_dim;              % Right now it calculates the distance from COM of lacunae to location of first voxel outside lacunae
+micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     
+micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     
+micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     
+micY(i) = Y(i)*y_dim;              
 micZ(i) = Z(i)*z_dim; 
 Rad(i).shrtPos = sqrt((micX(i)-micX1(i))^2+(micY(i)-micY1(i))^2+(micZ(i)-micZ1(i))^2);
 end
@@ -414,11 +423,11 @@ while mask(round(Y1(i)),round(X1(i)),round(Z1(i))) ==  mask(round(oldY1(i)),roun
 end
 
 % get location of furthermost voxel and then measure distance using distance formula
-micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     % Not sure which point to use for the distance formula.
-micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     % should I use round() numbers since that marks the voxel location in the matrix?
-micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     % should I use the first location outside lacunae, last voxel in lacunae, 
-micX(i) = X(i)*x_dim;              % or last voxel in lacunae with the center translated to middle of voxel?
-micY(i) = Y(i)*y_dim;              % Right now it calculates the distance from COM of lacunae to location of first voxel outside lacunae
+micX1(i) = round(oldX1(i))*x_dim-0.5*x_dim;     
+micY1(i) = round(oldY1(i))*y_dim-0.5*y_dim;     
+micZ1(i) = round(oldZ1(i))*z_dim-0.5*z_dim;     
+micX(i) = X(i)*x_dim;              
+micY(i) = Y(i)*y_dim;              
 micZ(i) = Z(i)*z_dim; 
 Rad(i).shrtNeg = sqrt((micX(i)-micX1(i))^2+(micY(i)-micY1(i))^2+(micZ(i)-micZ1(i))^2);
 end

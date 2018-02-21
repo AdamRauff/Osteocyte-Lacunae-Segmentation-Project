@@ -1,11 +1,20 @@
 % AnalyzeLacunae.m
-% Calculate principal moments of inertia
-% and principal axes of each osteocyte lacuna.
+
+% v1 Authored by Adam Rauff & Chelsea Heveran
+
+% Part 1
+% Calculate moments of inertia
+% and axes of each lacuna.
+
+% Part 2
+% Eigen decomposition - principal moments
+
 
 % call on Get voxel location script to acuire necessary preceding
 % information
 GetVoxelLocations;
 
+%% Part 1 - Calculate moments of interia
 % pre-allocate structure
 fieldVal =cell(TotLacNum,1);
 MomInt = struct('theta',fieldVal,'phi',fieldVal, 'I', fieldVal, 'V', fieldVal, 'D', fieldVal);
@@ -47,6 +56,7 @@ for i = 1:TotLacNum
     end
 end
 
+%% Part 2 - Principal Moments
 for i = 1 : TotLacNum
     
     % multpily moments of intertia by voxel volume
