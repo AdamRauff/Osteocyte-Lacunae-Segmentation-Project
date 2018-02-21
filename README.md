@@ -1,6 +1,6 @@
 # Osteocyte-Lacunae-Segmentation-Project
 
-To run the program, simply run LacunarDistance.m
+To run the program, run LacunarDistance.m\n
 This script calls on all the necessary files.
 
 Briefly, here is the pipeline of the program
