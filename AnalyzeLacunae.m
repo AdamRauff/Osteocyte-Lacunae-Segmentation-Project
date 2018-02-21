@@ -21,9 +21,8 @@ for i = 1:TotLacNum
     % calculating moments of inertia matrix
     for j = 1 : NumLacVox(i)
         
-        % notice the moments of inertia are calculated, but the axes are
-        % shifted for each object. Each moments are calculated with a
-        % coordinate system were the origin is the COM of the lacuna
+        % Axes are shifted for each object. Each moment is calculated with a
+        % coordinate system where the origin is the COM of the lacuna
         MomInt(i).I(1,1) = MomInt(i).I(1,1) + ((maskVoxelLoc(i).LacCoord(j,2)- maskVoxelLoc(i).COM(1,2))^2+...
         (maskVoxelLoc(i).LacCoord(j,3)- maskVoxelLoc(i).COM(1,3))^2)...
         + 1/12*(y_dim^2+z_dim^2);
@@ -50,24 +49,15 @@ end
 
 for i = 1 : TotLacNum
     
-    % -------------------------------------------------------------------
-    % multpily moments of intertia by voxel volume? 
-    
-    % Answer: 
-    % This step is carried out due to the dV at the end of the integral in
-    % the equation for moments of inertia. The density is 1 (as we
-    % treat all segmented voxels the same, and only interested in shape).
-  
+    % multpily moments of intertia by voxel volume
     MomInt(i).I = MomInt(i).I*(x_dim*y_dim*z_dim);
-    % -------------------------------------------------------------------
     
     % Make sure all moments outside the diagonal are negatives
     MomInt(i).I(1,2) = -MomInt(i).I(1,2);
     MomInt(i).I(1,3) = -MomInt(i).I(1,3);
     MomInt(i).I(2,3) = -MomInt(i).I(2,3);
     
-    % This matrix is symmetric (as the moments tensor of any blob is
-    % symmetric)
+    % This matrix is symmetric 
     MomInt(i).I(2,1) = MomInt(i).I(1,2);
     MomInt(i).I(3,1) = MomInt(i).I(1,3);
     MomInt(i).I(3,2) = MomInt(i).I(2,3);

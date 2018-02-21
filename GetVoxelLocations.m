@@ -1,19 +1,31 @@
 %% GetVoxelLocations.m
+
+% v1 Authored by Adam Rauff & Chelsea Heveran
+
 % Finds number of mask voxels and records their (x,y,z) locations.
 % Locations are defined as the center of the voxel in units of microns.
+
+% Part 1
+% Segment Lacunae
+% The information for this script is contained in Segment_Lacunae.m 
+
+% Part 2
+% extract elementary image statistics (i.e size, number of voxels, ...)
+
+% Part 3
+% calculate the Center of Mass (COM) of each lacunae and coordinate (x,y,z)
+% of each lacunar voxel.
 
 % prepare workspace
 clc; close all; clear all
 
-
 %% flags
-    
 % print the number of objects throughout each step of the segmentation
 PRINT_NUM_OBJ = true; 
 
 % display a graph (made with isosurface) of the segmented lacunae with
 % arrows modeling their principle axes
-DISP_MOMENT_VECT = false;
+DISP_MOMENT_VECT = true;
 
 % The following flag should not can only be true if DISP_MOMENT_VECT is
 % true
@@ -82,15 +94,13 @@ perLacVol = TotLacsVol/ImStackVolume;
 % Lacunar density: 1 lacuna per bone volume (1/micron^3) 
 lacDensity = (numTotalVoxels*(y_dim*x_dim*z_dim))/TotLacNum; 
 
-% Consider using regionprops or getting the number of voxels of each
-% lacunae from labelmatrix / bwconncomp
+%% Calculate COM and all voxels of each lacunae
+
+% pre-allocate structure to store COM and lacunae Coordinates of each lacunae
+fieldVal =cell(TotLacNum,1);
 
 % pre allocate
 NumLacVox = zeros(TotLacNum,1);
-
-%% Calculate COM and all voxels of each lacunae
-% pre-allocate structure to store COM and lacunae Coordinates of each lacunae
-fieldVal =cell(TotLacNum,1);
 
 % field that stores the coordinates of the center of mass of each lacunae (microns)
 % (x, y, z) format, and a field that stores the location of each voxel of
@@ -114,9 +124,7 @@ for i = 1 : TotLacNum
     
         % scroll through every voxel that is found for the lacuna
         for j=1:length(row)
-        % WHY?????????
-        % Please find instance of use of this information stored
-        % (coordinates in microns) and comment here!!!!!!!
+        
         % 1) Center of Mass (in microns) - AnalyzeLacunae
         % 2) Calculation of moments of intertia - AnalyzeLacunae
         
@@ -126,9 +134,9 @@ for i = 1 : TotLacNum
             maskVoxelLoc(i).LacCoord(j,:) = [x y z 0];
 
 %--------------------------------------------------------------------------
-% IMPORTANT NOTE, image coordinates are ordinaily flipped from matrix
-% subscripts! (not here),
-% That is, coordinates are given in (x, y), where subsripts are given in (row, col).
+% IMPORTANT NOTE, image coordinates are flipped from matrix
+% subscripts! 
+% That is, coordinates are given in (x, y), where subscripts are given in (row, col).
 % the row specified the y coordinate, while column specifies the x
 % coordinate
 %--------------------------------------------------------------------------
@@ -160,5 +168,3 @@ stdLacVol = std(LacVol);
 
 % clear unused variables for a more clear workspace
 clear x y z i j k r row col slic tempInds
-
-

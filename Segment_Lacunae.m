@@ -1,37 +1,63 @@
 %% Osteocyte isolation algorithm
-% Adam Rauff, Chelsea Heveran
-% Summer 2016
+
+% v1 Authored by Adam Rauff & Chelsea Heveran
 
 % The purpose of this program is to segment osteocyte lacunae. 
 % The segmentation is written for bone specimen stained with basic fuchsin,
-% embedded in (methyl methacrylate?), and polished to a thickness of 100-200
+% embedded in poly(methyl) methyl methacrylate, and polished to a thickness of 100-200
 % microns.
+
 % The images were acquired with a confocal microscope, and stored as 16
 % bit tiff sequences
 
-% Limitations of this Code: 
+% Part 1
+% data allocation
+%   - read/write files
+% elementary image provessing
+%   - blurring, binarizing
 
+% Part 2
+% Opening - erosion followed by dilation
+
+% Part 3
+% Label each Lacunae (labelmatrix)
+% obtain elementary statistics (volume)
+
+% part 4
+% volume filtering
+% lacunae must be between 100 - 2000 micron^3 (line 246). These values can
+% be changed.
+
+% part 5
+% Edge filtering - remove lacunae that touch borders
+
+% part 6
+% Save segmented image
+
+% Part 7
+% UI filtering - quality control by user
+
+% Limitations of this Code: 
 % the image set must consist of images of the same class
-% and size. (ex: class is like 16 bit, or 8 bit ...)
-% The current code is built under the impression the
-% image set consists of tifs, and all other formats are
-% excluded (very easy to alter see line 95).
-% The code assumes the images are alphabetically
-% ordered per their intended 3D stack alignment in the folder
-% chosen above. (usually true when software spits image sequence as it
-% numbers it 00-99 or so)
+% and size. (class - 16 bit, 8 bit ...
+%            size (Height x Width x Depth.
+% Code written for tif image sets, all other formats are
+% excluded (very easy to alter see line 107).
+% Code assumes images are chronologically
+% ordered for 3D stack alignment in the folder
+% chosen above. (i.e Img001, Img002, ...)
+
 
 function [UserFilteredMat, BWCCobj, VoxDim, FolderName, MouseName, IMClass, myThresh] = Segment_Lacunae(PRNT_NUM_OBJ)
 
+%% Part1 - Data handling
 global temp
-
 temp = 0;
 
-% import data
-    
 % Display a UI to allow user to select folder of interest
 folder = uigetdir('','Enter the folder that contains images, then select Open');
 
+% if folder is not found
 if folder == 0
     disp('Program cancelled');
     UserFilteredMat = 'Nada';
@@ -62,8 +88,8 @@ end
 
 VoxDim = [x_dim, y_dim, z_dim];
 % Create a new folder within the selected folder to store the processed
-% images
-% create Processed Image within selected image folder ^
+% images. Make Sure you can run code twice, without overwriting previous
+% results
 A = dir(strcat(folder,'/','Processed Image*'));
 S = size(A);
 if S(1) == 0;
@@ -88,13 +114,13 @@ ListOfImageNames = cell(tempNumImages,1); % Initialize cell to store list of str
 filenames2 = cell(tempNumImages,1); % intialize cell to store list of strings (segmented image names)
 
 % threshold used
-myThresh = 1.9; % this number will me multiplied by the gaussian mean of each image to determine the threshold
+myThresh = 1.9; % this number will me multiplied by the gaussian mean of each image to determine the threshold. This threshold worked for our data, and may need to change with different datasets.
 
 % Filter list of files
 for Index = 1:length(ImageFiles)
     
-    % if there is an image below a certain size within folder (10000 bytes,
-    % skip to next file, this cannot possibly be a 16-bit tiff
+    % if image below certain size (10000 bytes), skip to next file.
+    % Probably not 16-bit tiff.
     if ImageFiles(Index).bytes < 10000
         continue
     end
@@ -103,14 +129,41 @@ for Index = 1:length(ImageFiles)
     baseFileName = ImageFiles(Index).name;
     [~, name, extension] = fileparts(baseFileName);
     
-    % Keep only BMP, JPG, and TIF image files.
+    % Keep only TIF image files.
     if strcmpi(extension,'.tif')
-       
-            
+                      
         temp = temp + 1; % variable that keeps track of the slice number
         
         ListOfImageNames{temp,1} = baseFileName;
         IM = imread(strcat(folder,'/',baseFileName));
+        
+        % check number of channels
+        numChan = size(IM);
+        
+        if length(numChan) > 3 
+            % exit
+            disp('image contains too many dimensions');
+            disp('Program cancelled');
+            
+            UserFilteredMat = 'Nada';
+            BWCCobj = 'Nada';
+            VoxDim = 'Nada';
+            FolderName = 'Nada';
+            MouseName = 'Nada';
+            return
+            
+        elseif length(numChan) == 3 && numChan(3) > 1
+            % exit
+            disp('image contains too many color channels');
+            disp('please provide grayscale images, 8 or 16 bit');
+            
+            UserFilteredMat = 'Nada';
+            BWCCobj = 'Nada';
+            VoxDim = 'Nada';
+            FolderName = 'Nada';
+            MouseName = 'Nada';
+            return
+        end
 
         % once the first image is read, pre-allocate 3D image Matrices
         if temp == 1
@@ -156,7 +209,7 @@ end
 % filling all the holes in objects
 SegMat3DF = imfill(SegMat3D,'holes');
 
-%% dilation erosion experiment
+%% Part 2 - Opening
 
 % construct structuring element (3D sphere of radius 5)
 SE = strel('sphere',3);
@@ -165,25 +218,24 @@ SE = strel('sphere',3);
 % dilate objects back to around their original volumes
 Mat3D3 = imopen(SegMat3DF,SE);
 
-%% basic statistics and such
+%% Part 3 - Lable Lacunae 
 
 CC2 = bwconncomp(Mat3D3);
 
 L2 = labelmatrix(CC2); % labels each object found in the matrix
 
-% consider obtaining the volume of each object from labelmatrix for consistency (and that way don't have to use regionprops function) 
 stats2 = regionprops(CC2,'Area');
 
-%% Volume filtering
+%% Part 4 - Volume filtering
 
 objVols = zeros(CC2.NumObjects,1); % pre-allocation of matrix
-% objVols2 = zeros(CC2.NumObjects,1); % pre-allocation of matrix
 
 ind = 1;
 
 if PRNT_NUM_OBJ == true
     disp(['perliminary # of objects: ', num2str(CC2.NumObjects)]);
 end
+
 % calculating volume of each object (method 1)
 for i = 1:CC2.NumObjects
     
@@ -207,9 +259,6 @@ if exist('rmList','var')
     end
 end
 
-% because the only desired quantity here is number of objects, consider
-% looking into a less expensive function than bwconncomp. is regionprops
-% less expensive? does it tell you number of objects?
 if PRNT_NUM_OBJ == true
     CC3 = bwconncomp(L3);
     disp(['# of objects after volume filter: ', num2str(CC3.NumObjects)]);
@@ -217,16 +266,16 @@ end
 
 clear rmList 
 
-%% Edge filter
-% now remove objects that are touching the edges of the image (cannot
-% analyze these objects correctly if the entire morphology isn't included)
+%% Part 5 - Edge filter
+% Remove objects touching edges of image (cannot analyze these objects correctly 
+% if the entire morphology isn't included)
 
 % find indices of all non-zero voxels
 Inds(:,1) = find(L3); % find non-zero elements
-
 B = size(L3);
 
-[rows(:,1), cols(:,1), sli(:,1)] = ind2sub(B,Inds); % get (x,y,z) subscripts of each nonzero element
+% get (x,y,z) subscripts of each nonzero element
+[rows(:,1), cols(:,1), sli(:,1)] = ind2sub(B,Inds); 
 
 clear Inds
 rmList = []; % intialize
@@ -258,18 +307,14 @@ for i = 1:length(objNums)
     L3(L3==objNums(i)) = 0;
 end
 
-% because the only desired quantity here is number of objects, consider
-% looking into a less expensive function than bwconncomp. is regionprops
-% less expensive? does it tell you number of objects?
 if PRNT_NUM_OBJ == true
     CC4 = bwconncomp(L3);
     disp(['# of objects after edge filter: ', num2str(CC4.NumObjects)]);
 end
 
-%% save segmented image superimposed on original
+%% Part 6 - save segmented image superimposed on original
 
-% convert back to binary (threshold of 0.1 --> convert all numbered objects
-% to 1)
+% convert back to binary 
 BIM = L3>0.1;
 
 % pre-allocate structure to store RGB images of segmented files
@@ -286,7 +331,7 @@ for i = 1:B(3)
     SegFileMat(i).SegFile = imoverlay(OrigMat(:,:,i),BIM(:,:,i),[1 0 0]);
 end
 
-%% Quality Control Check (GUI)
+%% Part 7 - Quality Control Check (GUI)
 
 % create structure with information to send to GUI
 UIStruct(1).ImageLoc = folder; % folder of original images
@@ -323,10 +368,8 @@ function [Binarized_image]  = Funrun(image, maxInt, myThresh)
 Gauss_image = imgaussfilt(image,0.65);
 
 % calculate the mean intensity of the image (used as threshold parameter
-% imMean = mean2(image);
-
 imGMean = mean2(Gauss_image);
 
 % simple thresholding binarization
-Binarized_image = im2bw(Gauss_image,(imGMean*myThresh)/maxInt); % this code rund the threshold as 1.9*mean of each image
+Binarized_image = im2bw(Gauss_image,(imGMean*myThresh)/maxInt); % this code runs the threshold as 1.9*mean of each image
 end
