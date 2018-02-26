@@ -7,12 +7,15 @@
 
 % Part 1
 % SA of ellipsoid
+% Oblateness of ellipsoid: 2((b-a)/(c-a)) - 1, where radii a, b, c are radii in
+% increasing order. Oblateness is calculated from ellipsoidal and lacunar
+% radii. Reference Mader et al., Bone, 2013
 
 % Part 2
 % SA from point cloud (delaunay triangulation)
 
-% call on anisotropy and all preceding scripts 
-anisotropy;
+% call on sphericity and all preceding scripts 
+sphericity;
 
 %% Part 1 - ellipsoid SA
 % surface area of the ellipsoid
@@ -29,7 +32,8 @@ end
 eliVol = zeros(TotLacNum,1);
 eliLngRad = zeros(TotLacNum,1);
 eliSndRad = zeros(TotLacNum,1);
-elishrtRad = zeros(TotLacNum,1);
+eliShrtRad = zeros(TotLacNum,1);
+eliOblateness = zeros(TotLacNum,1);
 
 % measuring ellipsodial volume
 for i = 1:TotLacNum
@@ -39,6 +43,7 @@ for i = 1:TotLacNum
     eliLngRad(i) = I(i).radii(1);
     eliSndRad(i) = I(i).radii(2);
     elishrtRad(i) = I(i).radii(3);
+    eliOblateness(i) = 2*((I(i).radii(2)-I(i).radii(3))/(I(i).radii(1)-I(i).radii(3)))-1;
 end
 
 %% Part 2 - SA from point cloud

@@ -15,7 +15,7 @@
 
 % Part 2
 %   - compute statistics
-%   - compute span theta
+%   - compute span theta (as an absolute value)
 
 % call on surface area and all preceding code
 surfaceArea;
@@ -32,7 +32,7 @@ ThetaVec = zeros(TotLacNum,1);
 for i = 1:TotLacNum
     %obtaining theta for major axis
     MomInt(i).theta = atan2d(V(i),U(i));  
-    MomInt(i).theta = MomInt(i).theta-90; % adjust, because x,y axis are flipped when consdiering image dimensions (coordinates and subscripts)
+    MomInt(i).theta = MomInt(i).theta-90; % adjust, because x,y axis are flipped when considering image dimensions (coordinates and subscripts)
     
     % the following if statements are meant to portray theta in its
     % smallest magnitude. Since the direction of the principle axis in the
@@ -46,7 +46,7 @@ for i = 1:TotLacNum
     if round(MomInt(i).theta) == 180 || round(MomInt(i).theta) == -180
         MomInt(i).theta = 0;
     end
-    
+d    
     % if theta is really small, adjust to 0
     if abs(MomInt(i).theta) < 0.001 
         MomInt(i).theta = 0;
@@ -131,14 +131,31 @@ VGenDirect = VGenDirect./norm(VGenDirect);
 % pre- allocate
 spanTheta = zeros(TotLacNum,1);
 
-% meausring the angle between vectors. Angle only exists on the plane
+% measuring the angle between vectors. Angle only exists on the plane
 % that is spanned by the two vectors
+
 for i = 1:TotLacNum
     spanTheta(i) = acosd((dot(VGenDirect,[U(i); V(i); W(i)]))/(norm(VGenDirect)*norm([U(i); V(i); W(i)])));
     spanTheta(i) = abs(spanTheta(i)); % this should always result in positive number
+    
+    %* See comments below for explanation of this if statement
     if spanTheta(i) > 90 && spanTheta(i) < 180
-        spanTheta(i) = -(180-spanTheta(i)); 
+        spanTheta(i) = 180-spanTheta(i);   
     elseif spanTheta(i) > 180 
         spanTheta(i) = spanTheta(i)-180;
     end
 end
+
+% The final values should all be positive for comparison
+
+%* The if statments above ensure the minimum angle is found between the
+% average direction and the lacunar direction
+% The eigen decomposition yields unit vectors, pointing in 1
+% direction. However, the principal axis of a lacunae can run in the positive or negative direction.
+% Thusthe value of span theta could be greater the 90 deg, and these if
+% statements correct for it.
+% example: in a 2D x,y plane, let the +y axis be the average vector, and 0 deg. 
+% If another vector is 95 deg away from it, pointing just below the +x
+% axis, we would want the calculation to read 85 deg, pointing just above
+% the -x axis. The deg stays positive, as all spanTheta values are compared
+% in positive values. They all lie on different planes.

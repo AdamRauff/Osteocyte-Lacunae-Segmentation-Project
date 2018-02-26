@@ -1,19 +1,21 @@
-% anisotropy.m
+% sphericity.m
 
 % v1 Authored by Adam Rauff & Chelsea Heveran
 
-% Compute lacunar and ellipsodial anisotropies.
-% Ellipsoidal anisotropy -  ratio of the smallest to
+% Compute lacunar and ellipsodial sphericities and oblateness
+% Ellipsoidal sphericity:  ratio of the smallest to
 % biggest eigenvalues.
-% Lacunar anisotropy - ratio of the smallest to biggest radii (measured
+% Lacunar sphericity: ratio of the smallest to biggest radii (measured
 % from voxels)
+% 
 
 % Part 1
-%   -convert principle moments to vectors (3,1)
+%   -convert principal moments to vectors (3,1)
 %   -measure best fit ellipsoid
+%   -measure ellipsoidal sphericity
 
 % Part 2
-% Measure anisotropy
+% Measure lacunar anisotropy
 
 % call on graph lacunae in order to invoke all preceding functions
 graphlacunae;
@@ -24,7 +26,7 @@ graphlacunae;
 fieldVal =cell(TotLacNum,1);
 I = struct('princI',fieldVal);
 
-% organize principle moments of intertia (3,3) to vectors (3,1)
+% organize principal moments of inertia (3,3) to vectors (3,1)
 for i = 1: TotLacNum
     I(i).princI = zeros(3,1);
     for j = 1:3         
@@ -32,21 +34,22 @@ for i = 1: TotLacNum
     end
 end
 
-% Solve for ellipsoid with identical moments of intertia
+% Solve for ellipsoid with identical moments of inertia
 for i = 1:TotLacNum
-    % equation derived from Mcreadie 2004
+    % equation derived from McCreadie et al 2004
     elipMat = [0 1 1; 1 0 1; 1 1 0];
     elipMat = (1/5)*LacVol(i)*elipMat;
-    I(i).radii = elipMat\I(i).princI; % solving for the 3 by 1 vecotr [a;b;c] of radii 
+    I(i).radii = elipMat\I(i).princI; % solving for the 3 by 1 vector [a;b;c] of radii 
     I(i).radii = sqrt(I(i).radii);    % of each lacunae that is estimated as an ellipsoid
 end                                   
 
 % pre- allocation
-eliAni = zeros(TotLacNum,1);
+eliSphericity = zeros(TotLacNum,1);
 
-% ellipsoidal anisotropy (anisotropy of the solved ellipsod)
+
+% ellipsoidal sphericity (sphericity of the solved ellipsoid)
 for i = 1:TotLacNum
-    eliAni(i) = min(I(i).radii)/max(I(i).radii);
+    eliSphericity(i) = min(I(i).radii)/max(I(i).radii);
 end
 
 %% Part 2 Measuring Lacunar Anisotropy. 
@@ -455,10 +458,11 @@ for i = 1:TotLacNum
     shrtNegRad(i,1) = Rad(i).shrtNeg;
 end
 
-%measuring the anisotropy
-lacAni = zeros(TotLacNum,1);
+%measuring the lacunar sphericity
+lacSphericity = zeros(TotLacNum,1);
+
 for i = 1:TotLacNum
-    lacAni(i,:) = min(lacRads(i,:))/max(lacRads(i,:));
-end
+    lacSphericity(i,:) = min(lacRads(i,:))/max(lacRads(i,:));
+ end
 
 clear oldX1 oldY1 oldZ1 i j micX micX1 micY micY1 micZ micZ1
