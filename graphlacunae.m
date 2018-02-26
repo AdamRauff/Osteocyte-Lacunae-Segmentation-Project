@@ -1,11 +1,27 @@
+% graphlacunae.m
+
+% v1 Authored by Adam Rauff & Chelsea Heveran
+
+% Part 1
+% create binary mask of foreground and background
+
+% Part 2
+% graph 3D segmented lacunae 
+
+% Part 3
+% compose direction and COM vectors
+
+% Part 4
+% Graph prinicpal moment vectors over lacunae
 
 % call on Analyze Lacunae script to acquire necessary preceding
 % information
 AnalyzeLacunae;
 
-% Until this point, mask has been a labeled matrix, as outputed from
-% Segment_Lacunae()
-% here it gets redefined to be a binary unsigned 8-bit image, with 0 for background,
+%% Part 1 - binary mask
+
+% mask is a labeled matrix (from Segment_Lacunae())
+% here it gets redefined to binary 8-bit image, with 0 for background,
 % and 255 for objects
 tempMask = zeros(x_size, y_size, z_size, 'uint8');
 tempMask(mask~=0) = 255;
@@ -19,6 +35,7 @@ mask = tempMask;
 % erase the tempMask variable
 clear tempMask
 
+%% Part 2 - plot Segmented lacunae 
 if DISP_MOMENT_VECT == true
     
     figure('Name','3D Rendering Moment directions'); hold on;
@@ -60,6 +77,7 @@ if DISP_MOMENT_VECT == true
     hold on;
 end
 
+%% Part 3 - compose direction, and COM vectors
 % pre-allocation
 X = zeros(TotLacNum,1); 
 Y = zeros(TotLacNum,1);
@@ -81,21 +99,9 @@ for i = 1:TotLacNum
     V(i) = MomInt(i).V(1,1);
     
     W(i) = MomInt(i).V(3,1);
-    
-    % This is a debugging trial
-    % an attemp to flip the direction of the 3rd direction (z), and then
-    % reset the vector (U, V, W) to be a unit vector
-%     if sign(MomInt(i).V(3,1)) == -1
-%         W(i) = -1-MomInt(i).V(3,1);
-%     else
-%         W(i) = 1-MomInt(i).V(3,1);
-%     end
-%     
-%     U(i) = U(i)/norm(U(i));
-%     V(i) = V(i)/norm(V(i));
-%     W(i) = W(i)/norm(W(i));
 end
 
+%% Part 4 - graph 3D principal moments over lacunae
 if DISP_MOMENT_VECT == true
     
     % quiver plots a vector int the plot using the parameters for point and
