@@ -1,16 +1,7 @@
 # Osteocyte-Lacunae-Segmentation-Project
 
-To run the program, run LacunarDistance.m\s
+To run the program, run Output_and_LacunarDistance.m
+
 This script calls on all the necessary files.
 
-Briefly, here is the pipeline of the program
-
-1) GetVoxelLocations
-  -set some flags
-  -segment lacunae, and call on GUI for manual quality control
-  -Calculate basic voxel statistics about each lacuna
-
-2) AnalyzeLacunae.m
-  -Calculate the principal moments of intertia of each lacuna
-
-3) 
+Check the Workflow powerpoint to see the sequence of the program
